@@ -1,0 +1,13 @@
+# Cache
+__pycache__
+
+# Data
+data/raw
+data/input/*.csv
+results/
+tests/images
+tests/model_summary
+
+# Own settings
+settings.json
+
