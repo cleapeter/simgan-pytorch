@@ -1,2 +1,1 @@
-ENV_NAME=tmnist
-conda create -n $ENV_NAME python=3.9
+conda create -n simgan_env python=3.9 pip -y
