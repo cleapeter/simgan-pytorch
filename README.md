@@ -15,7 +15,7 @@ For hands-on examples on how to use Ray Tune with Pytorch, I recommend these two
     chmod +x conda-env.sh # if file is not executable
     ./conda-env.sh
     ```
-- Install all requirements using ``conda install --file requirements.txt``
+- Install all requirements using ``pip install -r requirements.txt``
 - Follow the instructions in ``data/input/create_input_csv.py`` to download all data.
 - Modify ``search_and_train.py``:
     - Define the search space in the dictionary called param_space in run_search() function. See also [this documentation](https://docs.ray.io/en/latest/tune/api_docs/search_space.html).
