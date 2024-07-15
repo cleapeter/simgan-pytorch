@@ -5,6 +5,7 @@ __pycache__
 data/raw
 data/input/*.csv
 results/
+runs/
 tests/images
 tests/model_summary
 
