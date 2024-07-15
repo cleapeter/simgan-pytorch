@@ -229,10 +229,7 @@ def full_training(
         loss_refined = loss_refined_reg + loss_refined_adv
 
         # Save losses every log_steps
-        if (
-            current_step % log_steps_loss == 0
-            or current_step == config.max_steps - 1
-        ):
+        if current_step % log_steps_loss == 0:
             tmp_loss_r.append(loss_refined.item())
             tmp_loss_r_reg.append(loss_refined_reg.item())
             tmp_loss_r_adv.append(loss_refined_adv.item())
@@ -240,10 +237,7 @@ def full_training(
         loss_refined.backward()
         opt_refiner.step()
 
-    if (
-        current_step % log_steps_loss == 0
-        or current_step == config.max_steps - 1
-    ):
+    if current_step % log_steps_loss == 0:
         mean_loss_r = sum(tmp_loss_r) / num_r_steps
         mean_loss_r_adv = sum(tmp_loss_r_adv) / num_r_steps
         mean_loss_r_reg = sum(tmp_loss_r_reg) / num_r_steps
@@ -285,33 +279,24 @@ def full_training(
                 refined_images[: batch_size // 2] = history_img_batch
 
         # Training on real images
-        if conditional:
-            real_pred = discriminator(real_images, real_angle_id)
-        else:
-            real_pred = discriminator(real_images)
+        real_pred = discriminator(real_images, real_labels)
         real_label = torch.zeros(
             real_pred.size(0), dtype=torch.long, device=config.device
         )
-        loss_d_real = adv_loss(real_pred, real_label)
+        loss_d_real = loss_adv(real_pred, real_label)
 
         # Training on synthetic images
-        if conditional:
-            refined_pred = discriminator(refined_images, syn_angle_id)
-        else:
-            refined_pred = discriminator(refined_images)
+        refined_pred = discriminator(refined_images, syn_labels)
         refined_label = torch.ones(
             refined_pred.size(0), dtype=torch.long, device=config.device
         )
-        loss_d_refined = adv_loss(refined_pred, refined_label)
+        loss_d_refined = loss_adv(refined_pred, refined_label)
 
         # Get total loss
         loss_dis = loss_d_real + loss_d_refined
 
         # Save losses every log_steps
-        if (
-            current_step % log_steps_loss == 0
-            or current_step == config.max_steps - 1
-        ):
+        if current_step % log_steps_loss == 0:
             tmp_loss_d.append(loss_d_real.item() + loss_d_refined.item())
             tmp_loss_d_real.append(loss_d_real.item())
             tmp_acc_d_real.append(utils.calc_acc(real_pred, real_label))
@@ -323,10 +308,7 @@ def full_training(
         loss_dis.backward()
         opt_discriminator.step()
 
-    if (
-        current_step % log_steps_loss == 0
-        or current_step == config.max_steps - 1
-    ):
+    if current_step % log_steps_loss == 0:
         mean_loss_d_tot = sum(tmp_loss_d) / num_d_steps
         mean_loss_d_mean = mean_loss_d_tot / 2
         mean_loss_d_real = sum(tmp_loss_d_real) / num_d_steps
@@ -334,33 +316,23 @@ def full_training(
         mean_acc_d_real = sum(tmp_acc_d_real) / num_d_steps
         mean_acc_d_refined = sum(tmp_acc_d_refined) / num_d_steps
 
-    if (
-        current_step % log_steps_images == 0
-        or current_step == config.max_steps - 1
-    ) and plot_path is not None:
+    if (current_step % log_steps_images == 0) and plot_path is not None:
 
         if not os.path.exists(plot_path):
             os.makedirs(plot_path)
 
-        if conditional:
-            with torch.no_grad():
-                refined_images = refiner(syn_images, syn_angle_id)
+        with torch.no_grad():
+            refined_images = refiner(syn_images, syn_labels)
 
-            # Get images closest to angle ids [0, 10, 20, 30, 40]
-            syn_idx = [
-                torch.argmin(abs(syn_angle_id - i)) for i in [0, 10, 20, 30, 40]
-            ]
-            real_idx = [
-                torch.argmin(abs(real_angle_id - i))
-                for i in [0, 10, 20, 30, 40]
-            ]
-        else:
-            with torch.no_grad():
-                refined_images = refiner(syn_images)
+        syn_idx = [torch.argmin(abs(syn_labels - j)) for j in range(10)]
+        real_idx = [torch.argmin(abs(real_labels - j)) for j in range(10)]
+        # else:
+        #     with torch.no_grad():
+        #         refined_images = refiner(syn_images)
 
-            # Get 5 random images
-            syn_idx = random.sample(range(0, batch_size), 5)
-            real_idx = random.sample(range(0, batch_size), 5)
+        #     # Get 5 random images
+        #     syn_idx = random.sample(range(0, batch_size), 5)
+        #     real_idx = random.sample(range(0, batch_size), 5)
 
         selected_syn_images = [syn_images[i] for i in syn_idx]
         selected_refined_images = [refined_images[i] for i in syn_idx]
@@ -394,10 +366,7 @@ def full_training(
                 normalize=True,
             )
 
-    if (
-        current_step % log_steps_loss == 0
-        or current_step == config.max_steps - 1
-    ):
+    if current_step % log_steps_loss == 0:
         return (
             mean_loss_r,
             mean_loss_r_adv,
