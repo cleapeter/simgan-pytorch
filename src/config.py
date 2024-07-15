@@ -1,11 +1,11 @@
 import torch
 
 # Choose GPU if available
-device = torch.device('cuda:0' if (torch.cuda.is_available()) else 'cpu')
+device = torch.device("cuda:0" if (torch.cuda.is_available()) else "cpu")
 
 # File paths
-real_csv_file = 'data/input/real_mnist.csv'
-synthetic_csv_file = 'data/input/synthetic_mnist.csv'
+real_csv_file = "data/input/real_mnist.csv"
+synthetic_csv_file = "data/input/synthetic_mnist.csv"
 csv_file_paths = [real_csv_file, synthetic_csv_file]
 
 # Image properties
@@ -15,10 +15,10 @@ num_channels = 1
 num_classes = 10
 
 # Data preprocessing
-transform = 'minmax'
+transform = "minmax"
 
 # Model
-model = 'SimGAN'
+model = "SimGAN"
 
 # Number of combinations for hyperparameter tuning
 # if grid_search in raytuning -> use num_trials = 1
