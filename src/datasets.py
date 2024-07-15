@@ -24,28 +24,34 @@ class MNIST(Dataset):
 
         self.data = pd.read_csv(csv_file_path)
         self.digits = self.data.iloc[:, 1:].values
-        self.labels = self.data['label'].values
+        self.labels = self.data["label"].values
         self.transform = transform
 
-        if self.transform == 'standard':
+        if self.transform == "standard":
             scaler = StandardScaler()
             self.norm_digits = scaler.fit_transform(self.digits).reshape(
-                -1, config.img_height, config.img_width)
-        elif self.transform == 'minmax':
+                -1, config.img_height, config.img_width
+            )
+        elif self.transform == "minmax":
             scaler = MinMaxScaler(feature_range=(-1, 1))
             self.norm_digits = scaler.fit_transform(self.digits).reshape(
-                -1, config.img_height, config.img_width)
+                -1, config.img_height, config.img_width
+            )
 
     def __getitem__(self, index):
 
         if self.transform is not None:
             # Add channel dimension (1 channel for grayscale)
-            digit = torch.as_tensor(
-                self.norm_digits[index]).unsqueeze(dim=0).float()
+            digit = (
+                torch.as_tensor(self.norm_digits[index])
+                .unsqueeze(dim=0)
+                .float()
+            )
             label = torch.as_tensor(self.labels[index], dtype=torch.long)
         else:
             digit = self.digits[index].reshape(
-                -1, config.img_height, config.img_width)
+                -1, config.img_height, config.img_width
+            )
             label = self.labels[index]
 
         return digit, label
@@ -80,41 +86,33 @@ def get_dataloaders(csv_file_paths, batch_size, transform=None):
 
     real_dataset, synthetic_dataset = get_datasets(csv_file_paths, transform)
 
-    real_loader = DataLoader(
-        real_dataset,
-        batch_size=batch_size,
-        shuffle=True
-    )
+    real_loader = DataLoader(real_dataset, batch_size=batch_size, shuffle=True)
 
     syn_loader = DataLoader(
-        synthetic_dataset,
-        batch_size=batch_size,
-        shuffle=True
+        synthetic_dataset, batch_size=batch_size, shuffle=True
     )
 
     return real_loader, syn_loader
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
+    paths = ["data/input/real_mnist.csv", "data/input/synthetic_mnist.csv"]
 
     # Test MNIST class
-    syn_dataset = MNIST(config.synthetic_csv_file, transform='minmax')
-    print('Size of one synthetic image: ', syn_dataset[0][0].shape)
+    syn_dataset = MNIST(paths[1], transform="minmax")
+    print("Size of one synthetic image: ", syn_dataset[0][0].shape)
 
-    real_dataset = MNIST(config.real_csv_file, transform='minmax')
-    print('Size of one real image: ', real_dataset[0][0].shape)
+    real_dataset = MNIST(paths[0], transform="minmax")
+    print("Size of one real image: ", real_dataset[0][0].shape)
 
     # Test get_datasets function
-    paths = [config.real_csv_file, config.synthetic_csv_file]
-    real_dataset, syn_dataset = get_datasets(paths, transform='minmax')
-    print('Number of all real images: ', len(real_dataset))
-    print('Number of all synthetic images: ', len(syn_dataset))
+    real_dataset, syn_dataset = get_datasets(paths, transform="minmax")
+    print("Number of all real images: ", len(real_dataset))
+    print("Number of all synthetic images: ", len(syn_dataset))
 
     # Test get_dataloaders function
     real_dataloader, syn_dataloader = get_dataloaders(
-        paths,
-        batch_size=16,
-        transform='minmax'
+        paths, batch_size=16, transform="minmax"
     )
-    print('Number of real image batches: ', len(real_dataloader))
-    print('Number of synthetic image batches: ', len(syn_dataloader))
+    print("Number of real image batches: ", len(real_dataloader))
+    print("Number of synthetic image batches: ", len(syn_dataloader))
