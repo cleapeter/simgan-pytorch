@@ -52,23 +52,36 @@ def save_model_summary(save_path, network, network_name, batch_size):
 
     if not os.path.exists(save_path):
         os.makedirs(save_path)
-    f = open(save_path + f'model_{network_name}.txt', 'w')
-    f.write(str(summary(
-        network,
-        input_size=[(batch_size, config.num_channels,
-                     config.img_height, config.img_width),
-                    (batch_size, 1)],
-        dtypes=[torch.float, torch.long],
-        col_names=["input_size", "kernel_size",
-                   "output_size", "num_params"],
-        verbose=0))
+    f = open(save_path + f"model_{network_name}.txt", "w")
+    f.write(
+        str(
+            summary(
+                network,
+                input_size=[
+                    (
+                        batch_size,
+                        config.num_channels,
+                        config.img_height,
+                        config.img_width,
+                    ),
+                    (batch_size, 1),
+                ],
+                dtypes=[torch.float, torch.long],
+                col_names=[
+                    "input_size",
+                    "kernel_size",
+                    "output_size",
+                    "num_params",
+                ],
+                verbose=0,
+            )
+        )
     )
     f.close()
 
 
 def calc_acc(output, label):
-    """Function calculates the accuracy of the discriminator model.
-    """
+    """Function calculates the accuracy of the discriminator model."""
 
     softmax_output = torch.nn.functional.softmax(output, dim=1)
     acc = softmax_output.max(dim=1)[1].cpu().numpy() == label.cpu().numpy()
@@ -76,7 +89,7 @@ def calc_acc(output, label):
     return acc.mean()
 
 
-def save_metric_plots_pretraining(pre_r, pre_d=None, save_path='pretraining'):
+def save_metric_plots_pretraining(pre_r, pre_d=None, save_path="pretraining"):
     """Function creates plot for metrics of pretrained refiner and
     discrminator.
 
@@ -94,39 +107,45 @@ def save_metric_plots_pretraining(pre_r, pre_d=None, save_path='pretraining'):
     # Pretraining refiner
     plt.figure(figsize=(10, 7))
     plt.plot(steps_r, pre_r_loss)
-    plt.xlabel('Steps')
-    plt.ylabel('Self-regularization loss')
-    plt.title('Pretrained Refiner: self-reg loss')
-    plt.savefig(save_path + 'pre_r_loss.png')
+    plt.xlabel("Steps")
+    plt.ylabel("Self-regularization loss")
+    plt.title("Pretrained Refiner: self-reg loss")
+    plt.savefig(save_path + "pre_r_loss.png")
     plt.close()
 
     if pre_d is not None:
-        (pre_d_loss, pre_d_loss_real, pre_d_loss_syn, pre_d_acc_real,
-         pre_d_acc_syn, steps_d) = pre_d
+        (
+            pre_d_loss,
+            pre_d_loss_real,
+            pre_d_loss_syn,
+            pre_d_acc_real,
+            pre_d_acc_syn,
+            steps_d,
+        ) = pre_d
 
         pre_d_loss_mean = [i / 2 for i in pre_d_loss]
 
         # Pretraining discriminator: loss
         plt.figure(figsize=(10, 7))
-        plt.plot(steps_d, pre_d_loss_mean, label='mean loss')
-        plt.plot(steps_d, pre_d_loss_real, label='real loss')
-        plt.plot(steps_d, pre_d_loss_syn, label='syn loss')
+        plt.plot(steps_d, pre_d_loss_mean, label="mean loss")
+        plt.plot(steps_d, pre_d_loss_real, label="real loss")
+        plt.plot(steps_d, pre_d_loss_syn, label="syn loss")
         plt.legend()
-        plt.xlabel('Steps')
-        plt.ylabel('Adversarial loss')
-        plt.title('Pretrained Discriminator: Adversarial Loss')
-        plt.savefig(save_path + 'pre_d_loss.png')
+        plt.xlabel("Steps")
+        plt.ylabel("Adversarial loss")
+        plt.title("Pretrained Discriminator: Adversarial Loss")
+        plt.savefig(save_path + "pre_d_loss.png")
         plt.close()
 
         # Pretraining discriminator: accuracy
         plt.figure(figsize=(10, 7))
-        plt.plot(steps_d, pre_d_acc_real, label='real acc')
-        plt.plot(steps_d, pre_d_acc_syn, label='syn acc')
+        plt.plot(steps_d, pre_d_acc_real, label="real acc")
+        plt.plot(steps_d, pre_d_acc_syn, label="syn acc")
         plt.legend()
-        plt.xlabel('Steps')
-        plt.ylabel('Accuracy')
-        plt.title('Pretrained Discriminator: Accuracy')
-        plt.savefig(save_path + 'pre_d_acc.png')
+        plt.xlabel("Steps")
+        plt.ylabel("Accuracy")
+        plt.title("Pretrained Discriminator: Accuracy")
+        plt.savefig(save_path + "pre_d_acc.png")
         plt.close()
 
 
@@ -135,7 +154,8 @@ class ImageHistoryBuffer(object):
     https://github.com/mjdietzx/SimGAN/blob/master/utils/image_history_buffer.py
     and modified (one fix)
     """
-    def __init__(self, max_size):
+
+    def __init__(self, max_size, batch_size):
         """Class creates image history buffer which stores earlier generated
         images as a reference.
 
@@ -143,13 +163,13 @@ class ImageHistoryBuffer(object):
             max_size (int): max. number of images stored in buffer
         """
         self.image_history_buffer = np.zeros(
-            shape=(0, config.num_channels,
-                   config.img_height, config.img_width))
+            shape=(0, config.num_channels, config.img_height, config.img_width)
+        )
         self.max_size = max_size
-        self.batch_size = config.batch_size
+        self.batch_size = batch_size
 
     def add_images(self, images, num_to_add=None):
-        """ Function adds images to buffer.
+        """Function adds images to buffer.
 
         Args:
             images (np.array): images to be added to buffer
@@ -161,7 +181,8 @@ class ImageHistoryBuffer(object):
 
         if len(self.image_history_buffer) < self.max_size:
             self.image_history_buffer = np.append(
-                self.image_history_buffer, images[:num_to_add], axis=0)
+                self.image_history_buffer, images[:num_to_add], axis=0
+            )
         elif len(self.image_history_buffer) == self.max_size:
             self.image_history_buffer[:num_to_add] = images[:num_to_add]
         else:
@@ -170,7 +191,7 @@ class ImageHistoryBuffer(object):
         np.random.shuffle(self.image_history_buffer)
 
     def get_images(self, num_to_get=None):
-        """ Function gets a random sample of images from the buffer.
+        """Function gets a random sample of images from the buffer.
 
         Args:
             num_to_get (int): number of images to output. Default is
