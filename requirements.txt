@@ -1,7 +1,7 @@
 matplotlib==3.7.1
 numpy==1.25.0
 pandas==1.5.3
-ray==2.3.0
+ray[tune]==2.3.0
 scikit_learn==1.2.2
 torch==2.0.1
 torchinfo==1.8.0
